@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Placeholderium FREE BUILDING TOY ON THE INTERNET!!!!!!!!!!</title>
+  <style>
+    html, body {
+      margin: 0; 
+      padding: 0; 
+      height: 100%;
+      font-family: Arial, sans-serif;
+      background: url(' insert link here') no-repeat center center fixed;
+      background-size: cover;
+      color: #333;
+    }
+    body {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+    .container {
+      display: flex;
+      background: rgba(255, 255, 255, 0.95);
+      border-radius: 10px;
+      box-shadow: 0 0 15px rgba(0,0,0,0.3);
+      overflow: hidden;
+      width: 700px;
+      max-width: 90vw;
+      min-height: 450px;
+    }
+    .logo-panel {
+      background: #f44336; /* Roblox red */
+      flex: 1 1 50%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 40px 20px;
+      color: white;
+      position: relative;
+    }
+    .logo-panel img {
+      max-width: 450px;
+      user-select: none;
+    
+    }
+    .logo-panel p {
+      font-size: 18px;
+      font-weight: 600;
+      user-select: none;
+    }
+    .form-panel {
+      flex: 1 1 50%;
+      background: white;
+      padding: 40px 40px;
+      box-sizing: border-box;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+    .form-panel h2 {
+      margin: 0 0 30px 0;
+      font-weight: 700;
+      font-size: 26px;
+      color: #333;
+      user-select: none;
+    }
+    input[type="email"], input[type="password"] {
+      width: 100%;
+      padding: 14px 15px;
+      margin-bottom: 20px;
+      border: 1.5px solid #ccc;
+      border-radius: 4px;
+      font-size: 16px;
+      outline-offset: 2px;
+      transition: border-color 0.3s ease;
+    }
+    input[type="email"]:focus, input[type="password"]:focus {
+      border-color: #f44336;
+      outline: none;
+    }
+    button {
+      width: 100%;
+      background-color: #f44336;
+      border: none;
+      border-radius: 4px;
+      color: white;
+      font-size: 18px;
+      font-weight: 700;
+      padding: 14px 0;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+      user-select: none;
+    }
+    button:hover {
+      background-color: #d32f2f;
+    }
+    .toggle-link {
+      margin-top: 25px;
+      text-align: center;
+      color: #f44336;
+      cursor: pointer;
+      text-decoration: underline;
+      font-weight: 600;
+      user-select: none;
+    }
+    .message {
+      margin-top: 20px;
+      font-size: 14px;
+      color: #f44336;
+      min-height: 20px;
+      word-wrap: break-word;
+      text-align: center;
+      user-select: none;
+    }
+    @media (max-width: 720px) {
+      .container {
+        flex-direction: column;
+        width: 90vw;
+        min-height: auto;
+      }
+      .logo-panel, .form-panel {
+        flex: none;
+        width: 100%;
+        padding: 30px 20px;
+      }
+      .logo-panel h1 {
+        font-size: 36px;
+      }
+      .form-panel h2 {
+        font-size: 22px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+    <div class="logo-panel">
+      <img src="https://i.ibb.co/qYkpYfFs/logo.png" alt="Placeholderium Logo" draggable="false" />
+      <p>You Make the Game</p>
+    </div>
+
+    <div class="form-panel">
+      <h2 id="form-title">Login to Placeholderium</h2>
+
+      <input type="email" id="email" placeholder="Email" autocomplete="username" />
+      <input type="password" id="password" placeholder="Password" autocomplete="current-password" />
+
+      <button id="action-btn">Log In</button>
+
+      <div class="toggle-link" id="toggle-link">Don't have an account? Sign Up</div>
+
+      <div class="message" id="message"></div>
+    </div>
+  </div>
+
+  <!-- Firebase -->
+  <script src="https://www.gstatic.com/firebasejs/11.9.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/11.9.1/firebase-analytics.js"></script>
+
+  <<script>
+    // Your Firebase config
+    const firebaseConfig = {
+      apiKey: "AIzaSyDpNmH2It6fPAqx8HhoRCjhiFM9MR4e7gE",
+      authDomain: "khoobrixchatroom.firebaseapp.com",
+      databaseURL: "https://khoobrixchatroom-default-rtdb.firebaseio.com",
+      projectId: "khoobrixchatroom",
+      storageBucket: "khoobrixchatroom.firebasestorage.app",
+      messagingSenderId: "749575141514",
+      appId: "1:749575141514:web:56664908ce1592b6af9573"
+    };
+
+
+    firebase.initializeApp(firebaseConfig);
+
+    const auth = firebase.auth();
+
+    const emailInput = document.getElementById('email');
+    const passwordInput = document.getElementById('password');
+    const actionBtn = document.getElementById('action-btn');
+    const toggleLink = document.getElementById('toggle-link');
+    const formTitle = document.getElementById('form-title');
+    const messageDiv = document.getElementById('message');
+
+    let isLogin = true;
+
+    toggleLink.addEventListener('click', () => {
+      isLogin = !isLogin;
+      if (isLogin) {
+        formTitle.textContent = 'Login to Roblox';
+        actionBtn.textContent = 'Log In';
+        toggleLink.textContent = "Don't have an account? Sign Up";
+      } else {
+        formTitle.textContent = 'Sign Up for Roblox';
+        actionBtn.textContent = 'Sign Up';
+        toggleLink.textContent = "Already have an account? Log In";
+      }
+      messageDiv.textContent = '';
+      emailInput.value = '';
+      passwordInput.value = '';
+    });
+
+    actionBtn.addEventListener('click', () => {
+      const email = emailInput.value.trim();
+      const password = passwordInput.value.trim();
+      messageDiv.style.color = '#f44336';
+
+      if (!email || !password) {
+        messageDiv.textContent = 'Please enter email and password.';
+        return;
+      }
+
+      if (isLogin) {
+        auth.signInWithEmailAndPassword(email, password)
+          .then(userCredential => {
+            // Redirect on login success
+            window.location.href = "home.html";
+          })
+          .catch(error => {
+            messageDiv.textContent = error.message;
+          });
+      } else {
+        auth.createUserWithEmailAndPassword(email, password)
+          .then(userCredential => {
+            // Redirect on signup success
+            window.location.href = "home.html";
+          })
+          .catch(error => {
+            messageDiv.textContent = error.message;
+          });
+      }
+    });
+  </script>
+
+</body>
+</html>

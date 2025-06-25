@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Chat</title>
+  <style>
+    *{box-sizing:border-box}
+    body,html{margin:0;padding:0;height:100vh;font-family:Arial,sans-serif;background:#e8e8e8;overflow:hidden}
+    /* ---------- Topbar ---------- */
+    #topbar{height:50px;background:#002266;color:#fff;display:flex;align-items:center;gap:12px;padding:0 15px;position:fixed;top:0;left:0;right:0;z-index:1000}
+    #logo{font-size:22px;color:#ff0000;font-weight:bold;cursor:pointer}
+    #topbar-right{margin-left:auto;font-size:14px;display:flex;align-items:center;gap:6px}
+    #bc-badge img{height:24px}
+
+    /* ---------- Sidebar ---------- */
+    #sidebar{position:fixed;top:50px;left:0;width:180px;height:calc(100% - 50px);background:#f5f5f5;border-right:1px solid #ccc;padding-top:15px;overflow:auto}
+    #sidebar a{display:block;padding:10px 15px;color:#444;text-decoration:none;font-weight:bold;border-left:4px solid transparent}
+    #sidebar a.active{background:#e0e0e0;border-left-color:#cc0000;color:#cc0000}
+
+    /* ---------- Chat layout ---------- */
+    #main{margin-left:180px;margin-top:50px;height:calc(100vh - 50px);display:flex;flex-direction:column;overflow:hidden}
+    #chat-box{flex:1;padding:20px;overflow-y:auto;background:#fff}
+
+    /* Classic Roblox comment style */
+    .comment-box{display:flex;align-items:flex-start;margin-bottom:15px}
+    .avatar-wrap{position:relative;width:60px;height:60px}
+    .avatar-wrap img{width:60px;height:60px;border-radius:5px;display:block;object-fit:cover;}
+    .bc-overlay{position:absolute;bottom:0;left:0;width:24px;height:24px;border-radius:5px;border:2px solid white;box-sizing:border-box;background:#fff}
+    .bubble{flex:1;margin-left:15px;background:#f7f7f7;border:1px solid #ccc;border-radius:6px;padding:10px 15px}
+    .bubble-header{font-size:13px;color:#666;margin-bottom:4px}
+    .bubble-header strong{color:#002266}
+    .bubble-body{font-size:14px;color:#333;white-space:pre-wrap}
+
+    /* Input */
+    #input-bar{display:flex;padding:10px;background:#f0f0f0;border-top:1px solid #ccc}
+    #messageInput{flex:1;padding:8px;font-size:14px;border:1px solid #ccc;border-radius:4px}
+    #sendBtn{margin-left:10px;padding:8px 15px;background:#ff0000;border:none;color:#fff;font-weight:bold;border-radius:4px;cursor:pointer}
+  </style>
+</head>
+<body>
+  <!-- Topbar -->
+  <div id="topbar">
+    <div id="logo" onclick="location.href='home.html'">Placeholderium</div>
+    <div id="topbar-right">Hello,&nbsp;<span id="user-email">Loading…</span><span id="bc-badge"></span></div>
+  </div>
+
+  <!-- Sidebar -->
+  <div id="sidebar">
+    <a href="home.html">Home</a>
+    <a href="games.html">Games</a>
+    <a href="catalog.html">Catalog</a>
+    <a href="messages.html" class="active">Messages</a>
+    <a href="friends.html">Friends</a>
+    <a href="inventory.html">Inventory</a>
+    <a href="settings.html">Settings</a>
+    <a href="groups.html">Groups</a>
+    <a href="buildersclub.html">Builders Club</a>
+    <a href="placebux.html" style="display:inline-block;background:#00aaff;color:#fff;padding:12px 24px;border-radius:25px;font-weight:bold;text-align:center;text-decoration:none">Go to PlaceBux</a>
+  </div>
+
+  <!-- Chat area -->
+  <div id="main">
+    <div id="chat-box"></div>
+    <div id="input-bar">
+      <input id="messageInput" type="text" placeholder="Write a comment!">
+      <button id="sendBtn" onclick="sendMessage()">Comment</button>
+    </div>
+  </div>
+
+  <!-- Firebase -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+  <script>
+    const firebaseConfig={apiKey:"AIzaSyDpNmH2It6fPAqx8HhoRCjhiFM9MR4e7gE",authDomain:"khoobrixchatroom.firebaseapp.com",databaseURL:"https://khoobrixchatroom-default-rtdb.firebaseio.com",projectId:"khoobrixchatroom",storageBucket:"khoobrixchatroom.appspot.com",messagingSenderId:"749575141514",appId:"1:749575141514:web:56664908ce1592b6af9573"};
+    firebase.initializeApp(firebaseConfig);
+    const auth=firebase.auth();
+    const db=firebase.database();
+
+    const bcIcons={
+      BC:"https://i.imgur.com/VmU6cKk.png",
+      TBC:"https://i.imgur.com/NlE3AGH.png",
+      OBC:"https://i.imgur.com/nRzJhka.png"
+    };
+    const bcCache={}; // username -> tier
+
+    let username="Guest";
+
+    auth.onAuthStateChanged(user=>{
+      if(!user){location.href="index.html";return;}
+      username=user.email.split("@")[0];
+      document.getElementById("user-email").textContent=username;
+      db.ref("users/"+user.uid+"/membership").once("value",snap=>{
+        const tier=snap.val();
+        if(tier&&bcIcons[tier]){
+          const img=document.createElement("img");
+          img.src=bcIcons[tier];
+          img.style.height="24px";
+          document.getElementById("bc-badge").appendChild(img);
+        }
+      });
+    });
+
+    const chatBox=document.getElementById("chat-box");
+
+    // Render incoming messages
+    db.ref("chat").limitToLast(50).on("child_added",snap=>renderMessage(snap.val()));
+
+    function renderMessage(msg) {
+      const wrap = document.createElement("div");
+      wrap.className = "comment-box";
+
+      const av = document.createElement("div");
+      av.className = "avatar-wrap";
+
+      // Try to get avatar URL from localStorage
+      const localAvatar = localStorage.getItem("avatar_" + msg.name);
+      // Use local avatar if exists, else fallback to normal avatars folder
+      const avatarUrl = localAvatar ? localAvatar : `avatars/${msg.name}.png`;
+
+      av.innerHTML = `<img src="${avatarUrl}" alt="avatar" onerror="this.onerror=null;this.src='https://tr.rbxcdn.com/080f6c180cf9d1b6c65103820f52e1f5/420/420/Hat/Png'">`;
+      wrap.appendChild(av);
+
+      const bubble = document.createElement("div");
+      bubble.className = "bubble";
+      bubble.innerHTML = `<div class='bubble-header'>Posted just now by <strong>${msg.name}</strong></div><div class='bubble-body'>${msg.text}</div>`;
+      wrap.appendChild(bubble);
+
+      chatBox.appendChild(wrap);
+      chatBox.scrollTop = chatBox.scrollHeight;
+
+      if (bcCache[msg.name] !== undefined) {
+        attachBc(av, bcCache[msg.name]);
+      } else {
+        db.ref("users").orderByChild("username").equalTo(msg.name).once("value", snap => {
+          let tier = "";
+          snap.forEach(s => tier = s.val().membership || "");
+          bcCache[msg.name] = tier;
+          attachBc(av, tier);
+        });
+      }
+    }
+
+    function attachBc(avWrap,tier){
+      if(tier&&bcIcons[tier]){
+        const img=document.createElement("img");
+        img.className="bc-overlay";
+        img.src=bcIcons[tier];
+        avWrap.appendChild(img);
+      }
+    }
+
+    function sendMessage(){
+      const inp=document.getElementById("messageInput");
+      const text=inp.value.trim();if(!text)return;
+      db.ref("chat").push({name:username,text});
+      inp.value="";
+    }
+  </script>
+</body>
+</html>
