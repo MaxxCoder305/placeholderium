@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Placeholderium - Admin Panel</title>
+  <style>
+    * { box-sizing: border-box; }
+    body, html {
+      margin: 0; padding: 0; height: 100vh;
+      font-family: Arial, sans-serif; background: #eaeaea;
+    }
+    #topbar {
+      height: 50px; background: #333; color: white;
+      display: flex; align-items: center; padding: 0 15px;
+      position: fixed; top: 0; left: 0; right: 0; z-index: 1000;
+    }
+    #logo {
+      font-size: 22px; color: #ff0000; font-weight: bold; margin-right: 25px; cursor: pointer;
+    }
+    #topbar-right {
+      margin-left: auto; font-size: 14px;
+    }
+    #sidebar {
+      position: fixed; top: 50px; left: 0; width: 180px;
+      height: calc(100% - 50px); background: #f5f5f5;
+      border-right: 1px solid #ccc; padding-top: 15px;
+    }
+    #sidebar a {
+      display: block; padding: 10px 15px;
+      color: #444; text-decoration: none; border-left: 4px solid transparent;
+      font-weight: bold;
+    }
+    #sidebar a.active {
+      background: #e0e0e0; border-left-color: #cc0000; color: #cc0000;
+    }
+    #main {
+      margin-left: 180px; margin-top: 50px; padding: 20px;
+    }
+    .user-block {
+      background: white; padding: 10px; margin-bottom: 10px;
+      border: 1px solid #ccc; border-radius: 6px;
+      display: flex; justify-content: space-between; align-items: center;
+    }
+    .user-actions {
+      display: flex; gap: 10px;
+    }
+    .user-actions input {
+      padding: 5px; border: 1px solid #ccc; border-radius: 4px;
+    }
+    .btn {
+      padding: 5px 10px; border: none; cursor: pointer; border-radius: 4px;
+    }
+    .btn-update { background: #007bff; color: white; }
+    .btn-update:hover { background: #0056b3; }
+    .btn-delete { background: #cc0000; color: white; }
+    .btn-delete:hover { background: #990000; }
+    .btn-add { background: #28a745; color: white; }
+    .btn-add:hover { background: #1e7e34; }
+    #add-user-form { margin-bottom: 20px; background: white; padding: 10px; border: 1px solid #ccc; border-radius: 6px; }
+    #add-user-form input { margin-right: 10px; }
+  </style>
+</head>
+<body>
+  <div id="topbar">
+    <div id="logo">Placeholderium</div>
+    <div id="topbar-right">
+      Hello, <span id="user-email">Loading...</span>
+    </div>
+  </div>
+
+  <div id="sidebar">
+    <a href="home.html">Home</a>
+    <a href="games.html">Games</a>
+    <a href="catalog.html">Catalog</a>
+    <a href="messages.html">Messages</a>
+    <a href="friends.html">Friends</a>
+    <a href="inventory.html">Inventory</a>
+    <a href="settings.html">Settings</a>
+    <a href="admin.html">Admin</a>
+    <a href="buildersclub.html">Builders Club</a>
+    <a href="placebux.html" style="display:inline-block;background:#00aaff;color:#fff;padding:12px 24px;text-align:center;text-decoration:none;font-size:16px;border-radius:25px;font-weight:bold;">Go to PlaceBux</a>
+  </div>
+
+  <div id="main">
+    <h2>Admin Panel</h2>
+    <div id="add-user-form">
+      <input type="text" id="newUser" placeholder="Enter new username" />
+      <input type="password" id="newPassword" placeholder="Enter password" />
+      <button class="btn btn-add" onclick="addUser()">Add User</button>
+    </div>
+    <div id="user-list">Loading users...</div>
+  </div>
+
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyDpNmH2It6fPAqx8HhoRCjhiFM9MR4e7gE",
+      authDomain: "khoobrixchatroom.firebaseapp.com",
+      databaseURL: "https://khoobrixchatroom-default-rtdb.firebaseio.com",
+      projectId: "khoobrixchatroom",
+      storageBucket: "khoobrixchatroom.firebasestorage.app",
+      messagingSenderId: "749575141514",
+      appId: "1:749575141514:web:56664908ce1592b6af9573"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+    const db = firebase.database();
+
+    const allowedAdmins = [
+      "lukeborum@yahoo.com",
+      "skeptic@gmail.com",
+      "sanmsd@hjas.com"
+    ];
+
+    auth.onAuthStateChanged(user => {
+      if (user) {
+        const email = user.email;
+        document.getElementById("user-email").textContent = email;
+
+        if (!allowedAdmins.includes(email)) {
+          alert("You are not authorized to access this page.");
+          window.location.href = "home.html";
+        } else {
+          loadUsers();
+        }
+      } else {
+        window.location.href = "index.html";
+      }
+    });
+
+    function loadUsers() {
+      const userList = document.getElementById("user-list");
+      db.ref("users").once("value", snapshot => {
+        userList.innerHTML = "";
+        if (snapshot.exists()) {
+          snapshot.forEach(child => {
+            const userKey = child.key;
+            const div = document.createElement("div");
+            div.className = "user-block";
+            div.innerHTML = `
+              <span>${userKey}</span>
+              <div class="user-actions">
+                <input type="text" id="new-${userKey}" placeholder="New username" />
+                <button class="btn btn-update" onclick="updateUsername('${userKey}')">Update</button>
+                <button class="btn btn-delete" onclick="deleteUser('${userKey}')">Delete</button>
+              </div>
+            `;
+            userList.appendChild(div);
+          });
+        } else {
+          userList.textContent = "No users found.";
+        }
+      });
+    }
+
+    function updateUsername(oldKey) {
+      const newKey = document.getElementById("new-" + oldKey).value.trim();
+      if (!newKey) return alert("Enter a new username.");
+
+      db.ref("users/" + oldKey).once("value", snapshot => {
+        if (snapshot.exists()) {
+          const data = snapshot.val();
+          db.ref("users/" + newKey).set(data, () => {
+            db.ref("users/" + oldKey).remove(() => {
+              alert("Username updated.");
+              loadUsers();
+            });
+          });
+        }
+      });
+    }
+
+    function deleteUser(userKey) {
+      if (confirm(`Delete user "${userKey}"?`)) {
+        db.ref("users/" + userKey).remove().then(() => {
+          alert("User deleted.");
+          loadUsers();
+        }).catch(error => {
+          alert("Error deleting user.");
+          console.error(error);
+        });
+      }
+    }
+
+    function addUser() {
+      const username = document.getElementById("newUser").value.trim();
+      const password = document.getElementById("newPassword").value;
+      if (!username || !password) return alert("Please enter both username and password.");
+
+      auth.createUserWithEmailAndPassword(username + "@Placeholderium.fake", password)
+        .then(userCredential => {
+          db.ref("users/" + username).set({ friends: {} }, (error) => {
+            if (error) {
+              alert("Error saving user to database.");
+            } else {
+              alert("User added.");
+              document.getElementById("newUser").value = "";
+              document.getElementById("newPassword").value = "";
+              loadUsers();
+            }
+          });
+        })
+        .catch(error => {
+          alert("Error creating auth user: " + error.message);
+        });
+    }
+
+    document.getElementById("logo").onclick = () => {
+      window.location.href = "home.html";
+    };
+  </script>
+</body>
+</html>

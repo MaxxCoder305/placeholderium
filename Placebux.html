@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>PlaceBux Daily Claim</title>
+  <style>
+    * { box-sizing: border-box; }
+    body, html {
+      margin: 0; padding: 0; height: 100vh;
+      font-family: Arial, sans-serif;
+      background: #f0f8ff;
+    }
+    #topbar {
+      height: 50px;
+      background: #007bff;
+      color: white;
+      display: flex;
+      align-items: center;
+      padding: 0 15px;
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 1000;
+    }
+    #logo {
+      font-size: 22px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    #topbar-right {
+      margin-left: auto;
+      font-size: 14px;
+    }
+    #sidebar {
+      position: fixed;
+      top: 50px;
+      left: 0;
+      width: 180px;
+      height: calc(100% - 50px);
+      background: #f5f5f5;
+      border-right: 1px solid #ccc;
+      padding-top: 15px;
+    }
+    #sidebar a {
+      display: block;
+      padding: 10px 15px;
+      color: #444;
+      text-decoration: none;
+      font-weight: bold;
+      border-left: 4px solid transparent;
+    }
+    #sidebar a.active {
+      background: #e0e0e0;
+      border-left-color: #007bff;
+      color: #007bff;
+    }
+    #main {
+      margin-left: 180px;
+      margin-top: 50px;
+      padding: 30px;
+      text-align: center;
+    }
+    h1 { color: #007bff; }
+    button {
+      padding: 14px 28px;
+      font-size: 18px;
+      background: #00aaff;
+      color: white;
+      border: none;
+      border-radius: 25px;
+      cursor: pointer;
+      margin-top: 20px;
+    }
+    button:disabled {
+      background: gray;
+      cursor: not-allowed;
+    }
+    #Placebux {
+      margin-top: 20px;
+      font-size: 18px;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+
+  <div id="topbar">
+    <div id="logo" onclick="location.href='home.html'">Placeholderium</div>
+    <div id="topbar-right">Placebux System</div>
+  </div>
+
+  <div id="sidebar">
+    <a href="home.html">Home</a>
+    <a href="games.html">Games</a>
+    <a href="catalog.html">Catalog</a>
+    <a href="messages.html">Messages</a>
+    <a href="friends.html">Friends</a>
+    <a href="inventory.html">Inventory</a>
+    <a href="settings.html">Settings</a>
+    <a href="groups.html">Groups</a>
+    <a href="buildersclub.html">Builders Club</a>
+    <a href="placebux.html" style="display:inline-block;background:#00aaff;color:#fff;padding:12px 24px;text-align:center;text-decoration:none;font-size:16px;border-radius:25px;font-weight:bold;">Go to Placebux</a>
+  </div>
+
+  <div id="main">
+    <h1>Daily PlaceBux Claim</h1>
+    <button id="claimBtn">Claim 5 PlaceBux</button>
+    <div id="Placebux">Total PlaceBux: 0</div>
+  </div>
+
+  <script>
+    const claimBtn = document.getElementById("claimBtn");
+    const PlacebuxDisplay = document.getElementById("Placebux");
+
+    function updateDisplay() {
+      const total = localStorage.getItem("Placebux") || 0;
+      PlacebuxDisplay.textContent = "Total Placebux: " + total;
+    }
+
+    function canClaim() {
+      const lastClaim = localStorage.getItem("lastClaim");
+      if (!lastClaim) return true;
+      return Date.now() - parseInt(lastClaim) >= 86400000;
+    }
+
+    function setClaimed() {
+      localStorage.setItem("lastClaim", Date.now().toString());
+    }
+
+    claimBtn.onclick = () => {
+      let total = parseInt(localStorage.getItem("Placebux") || 0);
+      total += 5;
+      localStorage.setItem("Placebux", total);
+      setClaimed();
+      updateDisplay();
+      claimBtn.disabled = true;
+      claimBtn.textContent = "Come back in 24 hours!";
+    };
+
+    updateDisplay();
+    if (!canClaim()) {
+      claimBtn.disabled = true;
+      claimBtn.textContent = "Come back in 24 hours!";
+    }
+  </script>
+
+</body>
+</html>

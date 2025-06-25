@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Builders Club </title>
+  <style>
+    body, html {
+      margin: 0; padding: 0; font-family: Arial, sans-serif; background: #f0f2f5;
+    }
+    #topbar {
+      height: 50px;
+      background: #001f4d;
+      color: white;
+      display: flex;
+      align-items: center;
+      padding: 0 15px;
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 1000;
+    }
+    #logo {
+      font-size: 22px;
+      color: red;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    #sidebar {
+      position: fixed;
+      top: 50px;
+      left: 0;
+      width: 180px;
+      height: calc(100% - 50px);
+      background: #f5f5f5;
+      border-right: 1px solid #ccc;
+      padding-top: 15px;
+    }
+    #sidebar a {
+      display: block;
+      padding: 10px 15px;
+      color: #444;
+      text-decoration: none;
+      font-weight: bold;
+    }
+    #sidebar a.active {
+      background: #e0e0e0;
+      border-left: 4px solid #0055ff;
+      color: #0055ff;
+    }
+    #main {
+      margin-left: 180px;
+      margin-top: 50px;
+      padding: 20px;
+    }
+    .tier {
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      padding: 15px;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .tier img {
+      height: 60px;
+    }
+    .tier-info {
+      flex-grow: 1;
+      padding: 0 20px;
+    }
+    .tier-title {
+      font-size: 18px;
+      font-weight: bold;
+    }
+    .tier-desc {
+      font-size: 14px;
+      color: #fff;
+    }
+    .BC {
+      background: #007bff;
+      color: white;
+    }
+    .TBC {
+      background: orange;
+      color: white;
+    }
+    .OBC {
+      background: #d60000;
+      color: white;
+    }
+    .BC .tier-title,
+    .TBC .tier-title,
+    .OBC .tier-title {
+      color: white;
+    }
+    button {
+      padding: 6px 12px;
+      background: #0055ff;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+  </style>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyDpNmH2It6fPAqx8HhoRCjhiFM9MR4e7gE",
+      authDomain: "khoobrixchatroom.firebaseapp.com",
+      databaseURL: "https://khoobrixchatroom-default-rtdb.firebaseio.com",
+      projectId: "khoobrixchatroom",
+      storageBucket: "khoobrixchatroom.appspot.com",
+      messagingSenderId: "749575141514",
+      appId: "1:749575141514:web:56664908ce1592b6af9573"
+    };
+    firebase.initializeApp(firebaseConfig);
+
+    const tiers = {
+      BC: { features: "Daily Placebux, 1 Group, Classic Hat Access", icon: "https://i.imgur.com/VmU6cKk.png" },
+      TBC: { features: "Double Placebux, 5 Groups, Beta Items", icon: "https://i.imgur.com/NlE3AGH.png" },
+      OBC: { features: "Triple Placebux, 10 Groups, OBC Shop Access", icon: "https://i.imgur.com/nRzJhka.png" }
+    };
+
+    function joinMembership(type) {
+      const user = firebase.auth().currentUser;
+      if (!user) return alert("You must be signed in.");
+
+      const ref = firebase.database().ref("users/" + user.uid);
+      ref.update({
+        membership: type,
+        membershipFeatures: tiers[type].features
+      }).then(() => {
+        alert(`You joined ${type}! Features: ${tiers[type].features}`);
+      });
+    }
+
+    firebase.auth().onAuthStateChanged(user => {
+      if (!user) alert("Sign in to use Builders Club.");
+    });
+  </script>
+</head>
+<body>
+  <div id="topbar">
+    <div id="logo">Placeholderium</div>
+  </div>
+  <div id="sidebar">
+    <a href="home.html">Home</a>
+    <a href="games.html">Games</a>
+    <a href="catalog.html">Catalog</a>
+    <a href="messages.html">Messages</a>
+    <a href="friends.html">Friends</a>
+    <a href="inventory.html">Inventory</a>
+    <a href="buildersclub.html" class="active">Builders Club</a>
+  </div>
+  <div id="main">
+    <h2>Join Builders Club</h2>
+    <div class="tier BC">
+      <img src="https://web.archive.org/web/20180124012840im_/https://images.rbxcdn.com/ba707f47bb20a1f4804da461fb5d3c31.png" alt="BC">
+      <div class="tier-info">
+        <div class="tier-title">BC - Free</div>
+        <div class="tier-desc">Daily Placebux, 1 Group, Classic Hat Access</div>
+      </div>
+      <button onclick="joinMembership('BC')">Join BC</button>
+    </div>
+    <div class="tier TBC">
+      <img src="https://web.archive.org/web/20180124012840im_/https://images.rbxcdn.com/d7eb3ed186e351d99ce8c11503675721.png" alt="TBC">
+      <div class="tier-info">
+        <div class="tier-title">TBC - Free</div>
+        <div class="tier-desc">Double Placebux, 5 Groups, Beta Items</div>
+      </div>
+      <button onclick="joinMembership('TBC')">Join TBC</button>
+    </div>
+    <div class="tier OBC">
+      <img src="https://web.archive.org/web/20180124012840im_/https://images.rbxcdn.com/ca1d0aef06c5fc06a2d8b23aea5e20d2.png" alt="OBC">
+      <div class="tier-info">
+        <div class="tier-title">OBC - Free</div>
+        <div class="tier-desc">Triple Placebux, 10 Groups, OBC Shop Access</div>
+      </div>
+      <button onclick="joinMembership('OBC')">Join OBC</button>
+    </div>
+  </div>
+</body>
+</html>
